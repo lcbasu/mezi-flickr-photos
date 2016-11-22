@@ -18,14 +18,42 @@ class MainViewController: UIViewController {
     var screenWidth = 0.0;
     var screenHeight = 0.0;
     
+    let testImagesName = "mezi"
+    
+    var yPosition:CGFloat = 0
+    var imageContainerScrollViewContentHeight:CGFloat = 0.0
+    
     @IBOutlet weak var imageContainerScrollView: UIScrollView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        getScreenDetails();
-        getImageData();
-
         
+        getScreenDetails()
+        
+        getImageData()
+    }
+    
+    func loadImages() {
+        for photoInfo in allPhotosToBerendered {
+            let imageWidth = photoInfo.photoRenderingWidth
+            let imageHeight = photoInfo.photoRenderingHeight
+            let image = UIImage(named: self.testImagesName)
+            
+            let imageView = UIImageView()
+            
+            imageView.image = image
+            imageView.frame.size.height = CGFloat(imageHeight)
+            imageView.frame.size.width = CGFloat(imageWidth)
+            imageView.frame.origin.y = yPosition
+            imageView.frame.origin.x = 0
+            
+            self.imageContainerScrollView.addSubview(imageView)
+            
+            yPosition = yPosition + CGFloat(imageHeight)
+            imageContainerScrollViewContentHeight = imageContainerScrollViewContentHeight + CGFloat(imageHeight)
+            
+            self.imageContainerScrollView.contentSize = CGSize(width: CGFloat(self.screenWidth), height: imageContainerScrollViewContentHeight)
+        }
     }
     
     func getScreenDetails() {
@@ -89,6 +117,8 @@ class MainViewController: UIViewController {
                             self.allPhotosToBerendered.append(photoInfo)
                         }
                     }
+                    
+                    self.loadImages()
                 }
             } catch let error as NSError {
                 print(error)
