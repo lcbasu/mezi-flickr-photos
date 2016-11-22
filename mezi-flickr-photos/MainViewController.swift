@@ -44,8 +44,8 @@ class MainViewController: UIViewController {
             imageView.image = image
             imageView.frame.size.height = CGFloat(imageHeight)
             imageView.frame.size.width = CGFloat(imageWidth)
+            imageView.center = self.view.center
             imageView.frame.origin.y = yPosition
-            imageView.frame.origin.x = 0
             
             self.imageContainerScrollView.addSubview(imageView)
             
