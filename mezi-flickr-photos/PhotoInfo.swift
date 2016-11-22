@@ -11,13 +11,17 @@ import Foundation
 class PhotoInfo {
     
     var photoURL: String
-    var photoHeight: Int
-    var photoWidth: Int
+    var photoOriginalHeight: Double
+    var photoOriginalWidth: Double
+    var photoRenderingHeight: Double
+    var photoRenderingWidth: Double
     
-    init(photoURL: String, photoHeight: Int, photoWidth: Int) {
+    init(photoURL: String, photoOriginalHeight: Double, photoOriginalWidth: Double, photoRenderingHeight: Double, photoRenderingWidth: Double) {
         self.photoURL = photoURL
-        self.photoHeight = photoHeight
-        self.photoWidth = photoWidth
+        self.photoOriginalHeight = photoOriginalHeight
+        self.photoOriginalWidth = photoOriginalWidth
+        self.photoRenderingHeight = photoRenderingHeight
+        self.photoRenderingWidth = photoRenderingWidth
     }
 }
 
