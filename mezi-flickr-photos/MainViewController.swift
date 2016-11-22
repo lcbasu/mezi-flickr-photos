@@ -18,13 +18,14 @@ class MainViewController: UIViewController {
     var screenWidth = 0.0;
     var screenHeight = 0.0;
     
+    @IBOutlet weak var imageContainerScrollView: UIScrollView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         getScreenDetails();
         getImageData();
+
         
-        print("screenWidth: \(screenWidth)")
-        print("screenHeight: \(screenHeight)")
     }
     
     func getScreenDetails() {
