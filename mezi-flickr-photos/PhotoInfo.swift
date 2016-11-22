@@ -14,7 +14,7 @@ class PhotoInfo {
     var photoHeight: Int
     var photoWidth: Int
     
-    init(photoURL: String, appointmentBookingDate: String, photoHeight: Int, photoWidth: Int) {
+    init(photoURL: String, photoHeight: Int, photoWidth: Int) {
         self.photoURL = photoURL
         self.photoHeight = photoHeight
         self.photoWidth = photoWidth
