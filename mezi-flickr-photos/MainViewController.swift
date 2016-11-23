@@ -26,6 +26,8 @@ class MainViewController: UIViewController {
     
     @IBOutlet weak var imageContainerScrollView: UIScrollView!
     
+    var batchStartIndex = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -35,54 +37,59 @@ class MainViewController: UIViewController {
     }
     
     func loadImages() {
-
-//        var photosIndexesForBatch = [0, 1, 2, 3 , 4, 5, 6, 7]
-        
-        // create and load images in batches
-        
-        var index = 0
-        var totalImageHeight = 0.0;
+        while self.batchStartIndex < allPhotosToBeRendered.count-1 {
+            let batch = self.getBatchOfPhotos()
+            self.downloadPhotosInBatch(batch: batch)
+            self.displayPhotosInBatch(batch: batch)
+        }
+    }
+    
+    func getBatchOfPhotos() -> [Int] {
+        var totalImageHeight = 0.0
         var photosIndexesForBatch = [Int]()
-        while index < allPhotosToBeRendered.count {
-            if((totalImageHeight + allPhotosToBeRendered[index].photoRenderingHeight) <= self.screenHeight) {
-                totalImageHeight = totalImageHeight + allPhotosToBeRendered[index].photoRenderingHeight
-                photosIndexesForBatch.append(index)
-                index = index + 1
-            } else {
-                for i in photosIndexesForBatch {
-                    while allPhotosToBeRendered[i].state != .downloaded {
-                        self.startOperationsForPhotoRecord(photoDetails: allPhotosToBeRendered[i], index: i)
-                    }
-                }
-                // After all images in batch being downloaded
-                for i in photosIndexesForBatch {
-                    print("Loading image: \(i)")
-                    let imageWidth = allPhotosToBeRendered[i].photoRenderingWidth
-                    let imageHeight = allPhotosToBeRendered[i].photoRenderingHeight
-                    let image = allPhotosToBeRendered[i].image!
-                    
-                    print(allPhotosToBeRendered[i].image!)
-                    
-                    let imageView = UIImageView()
-                    
-                    imageView.image = image
-                    imageView.frame.size.height = CGFloat(imageHeight)
-                    imageView.frame.size.width = CGFloat(imageWidth)
-                    imageView.center = self.view.center
-                    imageView.frame.origin.y = yPosition
-                    
-                    self.imageContainerScrollView.addSubview(imageView)
-                    
-                    self.yPosition = self.yPosition + CGFloat(imageHeight)
-                    imageContainerScrollViewContentHeight = imageContainerScrollViewContentHeight + CGFloat(imageHeight)
-                    
-                    self.imageContainerScrollView.contentSize = CGSize(width: CGFloat(self.screenWidth), height: imageContainerScrollViewContentHeight)
-                }
-                totalImageHeight = 0.0;
-                photosIndexesForBatch.removeAll()
+        print("batchStartIndex: \(batchStartIndex)")
+        while ((totalImageHeight + allPhotosToBeRendered[batchStartIndex].photoRenderingHeight) <= self.screenHeight) {
+            totalImageHeight = totalImageHeight + allPhotosToBeRendered[batchStartIndex].photoRenderingHeight
+            photosIndexesForBatch.append(batchStartIndex)
+            batchStartIndex = batchStartIndex + 1
+        }
+        
+        return photosIndexesForBatch
+    }
+    
+    func downloadPhotosInBatch(batch: [Int]) {
+        for i in batch {
+            while allPhotosToBeRendered[i].state != .downloaded {
+                self.startOperationsForPhotoRecord(photoDetails: allPhotosToBeRendered[i], index: i)
             }
         }
     }
+    
+    func displayPhotosInBatch(batch: [Int]) {
+        for i in batch {
+            let imageWidth = allPhotosToBeRendered[i].photoRenderingWidth
+            let imageHeight = allPhotosToBeRendered[i].photoRenderingHeight
+            let image = allPhotosToBeRendered[i].image!
+            
+            print(allPhotosToBeRendered[i].image!)
+            
+            let imageView = UIImageView()
+            
+            imageView.image = image
+            imageView.frame.size.height = CGFloat(imageHeight)
+            imageView.frame.size.width = CGFloat(imageWidth)
+            imageView.center = self.view.center
+            imageView.frame.origin.y = yPosition
+            
+            self.imageContainerScrollView.addSubview(imageView)
+            
+            self.yPosition = self.yPosition + CGFloat(imageHeight)
+            imageContainerScrollViewContentHeight = imageContainerScrollViewContentHeight + CGFloat(imageHeight)
+            
+            self.imageContainerScrollView.contentSize = CGSize(width: CGFloat(self.screenWidth), height: imageContainerScrollViewContentHeight)
+        }
+    }
+    
     
     func getScreenDetails() {
         self.screenWidth = Double(self.view.bounds.width)
@@ -180,7 +187,7 @@ class MainViewController: UIViewController {
             }
             DispatchQueue.main.async(execute: {
                 self.pendingOperations.downloadsInProgress.removeValue(forKey: index)
-                print("Image is downloaded and can be set to be viewed: \(index)")
+//                print("Image is downloaded and can be set to be viewed: \(index)")
                 self.view.setNeedsDisplay()
             })
         }
