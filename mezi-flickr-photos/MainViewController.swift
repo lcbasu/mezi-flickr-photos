@@ -28,6 +28,12 @@ class MainViewController: UIViewController {
     
     var batchStartIndex = 0
     
+    var timer = Timer()
+    
+    var nextBatch = [Int]()
+    
+    var apiFetched = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -37,10 +43,34 @@ class MainViewController: UIViewController {
     }
     
     func loadImages() {
-        while self.batchStartIndex < allPhotosToBeRendered.count-1 {
-            let batch = self.getBatchOfPhotos()
+        let batch = self.getBatchOfPhotos()
+        if batch.count > 0 {
             self.downloadPhotosInBatch(batch: batch)
             self.displayPhotosInBatch(batch: batch)
+            self.nextBatch.removeAll()
+            self.nextBatch = self.getBatchOfPhotos()
+            self.downloadPhotosInBatch(batch: self.nextBatch)
+            self.timer = Timer.scheduledTimer(timeInterval: 10, target:self, selector: #selector(MainViewController.chekToRepeat), userInfo: nil, repeats: true)
+        } else {
+            print("No photos to display")
+            self.timer.invalidate()
+        }
+    }
+    
+    func chekToRepeat() {
+        print("Calling Timer")
+        if (batchStartIndex < allPhotosToBeRendered.count-1) {
+            if(self.nextBatch.count <= 0) {
+                self.nextBatch = self.getBatchOfPhotos()
+                self.downloadPhotosInBatch(batch: self.nextBatch)
+            }
+            self.displayPhotosInBatch(batch: self.nextBatch)
+            self.nextBatch.removeAll()
+            self.nextBatch = self.getBatchOfPhotos()
+            self.downloadPhotosInBatch(batch: self.nextBatch)
+        } else {
+            print("Invalidate timer")
+            self.timer.invalidate()
         }
     }
     
@@ -48,10 +78,14 @@ class MainViewController: UIViewController {
         var totalImageHeight = 0.0
         var photosIndexesForBatch = [Int]()
         print("batchStartIndex: \(batchStartIndex)")
-        while ((totalImageHeight + allPhotosToBeRendered[batchStartIndex].photoRenderingHeight) <= self.screenHeight) {
+        while ((batchStartIndex < allPhotosToBeRendered.count-1) && (totalImageHeight + allPhotosToBeRendered[batchStartIndex].photoRenderingHeight) <= self.screenHeight) {
             totalImageHeight = totalImageHeight + allPhotosToBeRendered[batchStartIndex].photoRenderingHeight
             photosIndexesForBatch.append(batchStartIndex)
             batchStartIndex = batchStartIndex + 1
+        }
+        
+        if (batchStartIndex >= allPhotosToBeRendered.count-1) {
+            self.timer.invalidate()
         }
         
         return photosIndexesForBatch
@@ -152,13 +186,21 @@ class MainViewController: UIViewController {
                             self.allPhotosToBeRendered.append(photoInfo)
                         }
                     }
-                    self.loadImages()
+                    self.apiFetched = true
                 }
             } catch let error as NSError {
                 print(error)
             }
         }
         task.resume()
+        // Just a tweak for now
+        while(true) {
+            if(apiFetched) {
+                print("API Fetched")
+                break
+            }
+        }
+        self.loadImages()
     }
     
     func downloadImages() {
