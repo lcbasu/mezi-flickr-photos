@@ -12,8 +12,9 @@ class MainViewController: UIViewController {
     
     let apiEndpoint = "https://api.flickr.com/services/rest/?method=flickr.interestingness.getList&api_key=d98f34e2210534e37332a2bb0ab18887&format=json&extras=url_n&nojsoncallback=1"
     
-    var allPhotoInfo = [PhotoInfo]()
-    var allPhotosToBerendered = [PhotoInfo]()
+    var allPhotoInfo = [PhotoRecord]()
+    var allPhotosToBeRendered = [PhotoRecord]()
+    let pendingOperations = PendingOperations()
     
     var screenWidth = 0.0;
     var screenHeight = 0.0;
@@ -34,7 +35,7 @@ class MainViewController: UIViewController {
     }
     
     func loadImages() {
-        for photoInfo in allPhotosToBerendered {
+        for photoInfo in allPhotosToBeRendered {
             let imageWidth = photoInfo.photoRenderingWidth
             let imageHeight = photoInfo.photoRenderingHeight
             let image = UIImage(named: self.testImagesName)
@@ -95,7 +96,7 @@ class MainViewController: UIViewController {
                     } else {
                         photoWidth = (photoWidthString! as NSString).doubleValue
                     }
-                    let photoDetailObject = PhotoInfo(photoURL: photoURL, photoOriginalHeight: photoHeight, photoOriginalWidth: photoWidth, photoRenderingHeight: photoHeight, photoRenderingWidth: photoWidth)
+                    let photoDetailObject = PhotoRecord(photoURL: NSURL(string: photoURL)! as URL, photoOriginalHeight: photoHeight, photoOriginalWidth: photoWidth, photoRenderingHeight: photoHeight, photoRenderingWidth: photoWidth)
                     self.allPhotoInfo.append(photoDetailObject)
                 }
                 // If we have some photos from api request
@@ -114,7 +115,7 @@ class MainViewController: UIViewController {
                     // Now rendering images with height <= than screen size
                     for photoInfo in self.allPhotoInfo {
                         if(photoInfo.photoRenderingHeight <= self.screenHeight) {
-                            self.allPhotosToBerendered.append(photoInfo)
+                            self.allPhotosToBeRendered.append(photoInfo)
                         }
                     }
                     
@@ -127,6 +128,40 @@ class MainViewController: UIViewController {
         task.resume()
     }
     
+    func downloadImages() {
+        
+    }
+    
+    
+    func startOperationsForPhotoRecord(photoDetails: PhotoRecord, index: Int){
+        switch (photoDetails.state) {
+        case .new:
+            self.startDownloadForRecord(photoDetails: photoDetails, index: index)
+        case .downloaded:
+            return
+        default:
+            print("Neither downloaded nor is new! Don't know what. :-(")
+        }
+    }
+    
+    func startDownloadForRecord(photoDetails: PhotoRecord, index: Int){
+        if pendingOperations.downloadsInProgress[index] != nil {
+            return
+        }
+        
+        let downloader = ImageDownloader(photoRecord: photoDetails)
+        downloader.completionBlock = {
+            if downloader.isCancelled {
+                return
+            }
+            DispatchQueue.main.async(execute: {
+                self.pendingOperations.downloadsInProgress.removeValue(forKey: index)
+                // Image is downloaded and can be set to be viewed
+            })
+        }
+        pendingOperations.downloadsInProgress[index] = downloader
+        pendingOperations.downloadQueue.addOperation(downloader)
+    }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
