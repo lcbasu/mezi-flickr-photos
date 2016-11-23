@@ -64,6 +64,7 @@ class MainViewController: UIViewController {
                 self.nextBatch = self.getBatchOfPhotos()
                 self.downloadPhotosInBatch(batch: self.nextBatch)
             }
+            self.imageContainerScrollView.setContentOffset(CGPoint.init(x: 0.0, y: imageContainerScrollViewContentHeight), animated: true)
             self.displayPhotosInBatch(batch: self.nextBatch)
             self.nextBatch.removeAll()
             self.nextBatch = self.getBatchOfPhotos()
